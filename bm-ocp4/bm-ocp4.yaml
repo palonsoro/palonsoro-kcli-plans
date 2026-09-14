@@ -1,5 +1,9 @@
 parameters:
   deploy_bootstrap: false
+  deploy_lb: false
+  lb_cpus: 2
+  lb_ram: 4096
+  lb_disk: 10
   cluster_name: 'default-cluster-name'
   control_plane_cpus: 4
   control_plane_ram: 16384
@@ -26,6 +30,19 @@ parameters:
   disks:
   - {{ control_plane_disk }}
   - {{ control_plane_second_disk }}
+
+{{ cluster_name }}-lb:
+  type: profile
+  image: centos10stream
+  numcpus: {{ lb_cpus }}
+  memory: {{ lb_ram }}
+  disks:
+  - {{ lb_disk }}
+  files:
+  - path: /etc/haproxy/haproxy.cfg
+    origin: lb/haproxy.cfg
+  scripts:
+  - lb/install-haproxy.sh
 
 {{ cluster_name }}-worker:
   type: profile
@@ -79,6 +96,15 @@ parameters:
   net: {{ network }}
   ip: {{ network_prefix }}.{{ worker+20 }}
 {% endfor %}
+
+{% if deploy_lb %}
+{{ cluster_name }}-lb:
+  profile:  {{ cluster_name }}-lb
+  nets: 
+  - name: {{ network }}
+    ip: {{ api_vip }}
+    mac: {{ mac_prefix }}:{{ "%0x"|format(19) }}
+{% endif %}
 
 api:
   type: dns
