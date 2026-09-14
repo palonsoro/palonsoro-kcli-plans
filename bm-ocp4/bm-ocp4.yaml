@@ -1,4 +1,5 @@
 parameters:
+  deploy_bootstrap: false
   cluster_name: 'default-cluster-name'
   control_plane_cpus: 4
   control_plane_ram: 16384
@@ -50,6 +51,20 @@ parameters:
   net: {{ network }}
   ip: {{ network_prefix }}.{{ controlplane+10 }}
 {% endfor %}
+
+{% if deploy_bootstrap %}
+{{ cluster_name }}-bootstrap:
+  profile:  {{ cluster_name }}-controlplane
+  nets: 
+  - name: {{ network }}
+    ip: {{ network_prefix }}.9
+    mac: {{ mac_prefix }}:{{ "%0x"|format(9) }}
+
+{{ cluster_name }}-bootstrap:
+  type: dns
+  net: {{ network }}
+  ip: {{ network_prefix }}.9
+{% endif %}
 
 {% for worker in range(0,workers) %}
 {{ cluster_name }}-worker-{{ worker }}:
