@@ -34,6 +34,7 @@ parameters:
 {{ cluster_name }}-lb:
   type: profile
   image: centos10stream
+  start: false
   numcpus: {{ lb_cpus }}
   memory: {{ lb_ram }}
   disks:
